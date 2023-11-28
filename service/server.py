@@ -53,7 +53,7 @@ def get_reserved_tische():
     cursor.execute('SELECT tischnummer, zeitpunkt FROM reservierungen ORDER BY zeitpunkt ASC')
     tische = cursor.fetchall()
     conn.close()
-    return jsonify({'tische': tische})
+    return jsonify({'tische': tische}), 200
 
 
 @app.route("/")
@@ -61,4 +61,4 @@ def hello_world():
     init_db()
     app.logger.info("Database connection successful")
     print("App started")
-    return "<p>Hello, World!</p>"
+    return "Database connection successful", 200
