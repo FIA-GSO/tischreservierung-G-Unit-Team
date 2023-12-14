@@ -50,6 +50,33 @@ def create_reservierung():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/reservierung/stornieren', methods=['POST'])
+def storniere_reservierung():
+    data = request.json
+    reservierungsnummer = data.get('reservierungsnummer')
+
+    if not reservierungsnummer:
+        return jsonify({'error': 'Reservierungsnummer muss angegeben werden'}), 400
+
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+
+        # Überprüfen, ob die Reservierung existiert
+        cursor.execute('SELECT * FROM reservierungen WHERE reservierungsnummer = ?', (reservierungsnummer,))
+        reservierung = cursor.fetchone()
+        if not reservierung:
+            return jsonify({'error': 'Reservierung nicht gefunden'}), 404
+
+        # Stornieren der Reservierung
+        cursor.execute('UPDATE reservierungen SET storniert = "True" WHERE reservierungsnummer = ?', (reservierungsnummer,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': 'Reservierung erfolgreich storniert'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/tische/frei', methods=['GET'])
 def get_freie_tische():
     zeitpunkt = request.args.get('zeitpunkt')
