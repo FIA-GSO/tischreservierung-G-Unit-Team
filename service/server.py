@@ -50,6 +50,34 @@ def create_reservierung():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/tische/frei', methods=['GET'])
+def get_freie_tische():
+    zeitpunkt = request.args.get('zeitpunkt')
+
+    # Überprüfen, ob der Zeitpunkt angegeben wurde
+    if not zeitpunkt:
+        return jsonify({'error': 'Zeitpunkt muss angegeben werden'}), 400
+
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+
+        # Wählen Sie alle Tische, die zu diesem Zeitpunkt nicht reserviert sind
+        query = '''
+        SELECT * FROM tische 
+        WHERE tischnummer NOT IN (
+            SELECT tischnummer FROM reservierungen 
+            WHERE zeitpunkt = ? AND storniert = "False"
+        )
+        '''
+        cursor.execute(query, (zeitpunkt,))
+        freie_tische = cursor.fetchall()
+        conn.close()
+
+        return jsonify({'freie_tische': freie_tische})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/reservierungen/all', methods=['GET'])
 def get_reservierungen():
     conn = sqlite3.connect(DATABASE)
